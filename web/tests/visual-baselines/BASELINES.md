@@ -5,9 +5,18 @@ All images are produced from this project's own procedural textures; none contai
 
 Accepted set of 2026-10-27: Chrome 156.0.8078.48 headless, ANGLE on an AMD Radeon RX 5700 XT (Direct3D 11), WebGL 2.0, viewport
 1000 x 640, device pixel ratio 1, quality `standard`, seed 1 with trigger solids off, screenshots clipped to the canvas at half scale
-(284 x 259 px) with the DOM view-switch overlay hidden, so the images are pure canvas pixels and do not depend on operating-system fonts. Comparison limits: mean absolute difference below 4 and under 3% of pixels more than 48 levels off. The same set
+(283 x 258 px). The canvas shell is pinned to an exact 568 x 518 px at the top-left of the page and the DOM view-switch overlay is
+hidden, so the images are pure canvas pixels and do not depend on operating-system fonts, scrollbars or page layout. Comparison limits: mean absolute difference below 4 and under 3% of pixels more than 48 levels off. The same set
 passes under Chrome's software rasterizer (SwiftShader, `GLMAZE_BROWSER_ARGS="--use-angle=swiftshader --enable-unsafe-swiftshader"`)
 with mean differences of at most 1.3, and under Edge 155 on the same machine (2026-10-22 set).
+
+## First Linux CI run (2026-10-28)
+
+The first run on a GitHub-hosted runner (Chrome 155.0.8059.39, SwiftShader, Ubuntu 24.04) failed 9 of 10 views with mean differences of 6 to 10.
+The frames were identical except for a vertical sub-pixel offset of the picture (best alignment at a 0 to 1 px shift): the canvas rect
+differed by a fraction of a pixel because page layout (fonts, scrollbars) differs between Windows and Linux. Test hygiene, not a rendering
+defect: the capture now pins the canvas shell to an exact size and position. The baselines were regenerated with the same renderer and the
+same views; the images are visually identical to the previous set.
 
 ## Diagnosis of the 0/10 failure of 2026-10-27
 

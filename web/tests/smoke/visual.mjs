@@ -46,7 +46,9 @@ try {
     await page.send("Page.navigate", { url: `${baseUrl}?seed=1&rng=microsoft&objects=0&reduced=0&quality=standard&markers=${view.markers ? 1 : 0}&view=first` });
     await wait(1200);
     await page.evaluate(`(() => { for (let i = 0; i < ${view.updates}; i += 1) document.getElementById('step').click(); })()`);
-    await page.evaluate("document.querySelector('.view-switch').style.visibility = 'hidden'");
+    // Pin the canvas shell to an exact size and position so the capture does not depend on page layout (fonts and scrollbars differ
+    // between operating systems and moved the picture by a fraction of a pixel on Linux), and hide the DOM overlay.
+    await page.evaluate("(() => { const s = document.getElementById('canvasShell'); s.style.cssText = 'position:fixed;left:0;top:0;width:568px;height:518px;margin:0;z-index:10'; document.querySelector('.view-switch').style.visibility = 'hidden'; })()");
     await wait(250);
     const rect = await page.evaluate(`(() => { const b = document.getElementById('webglCanvas').getBoundingClientRect(); return { x: b.x, y: b.y, width: b.width, height: b.height, scale: 0.5 }; })()`);
     const shot = (await page.send("Page.captureScreenshot", { format: "png", clip: rect })).data;
