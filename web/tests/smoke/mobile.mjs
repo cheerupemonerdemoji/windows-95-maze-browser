@@ -107,7 +107,7 @@ try {
       // Canvas resizing on orientation change: switch to the other orientation without reloading.
       const flipped = await emulate(device, !landscape);
       // The canvas is resized by the next rendered frame, which is slow on a software rasteriser: wait for it instead of a fixed delay.
-      for (let i = 0; i < 40; i += 1) {
+      for (let i = 0; i < 200; i += 1) { // up to 30 s: a 1600 x 720 frame can take seconds on a hosted software rasteriser
         await wait(150);
         const settled = await page.evaluate(`(() => { const c = ${$("webglCanvas")}; return Math.abs(c.width - Math.round(c.clientWidth * ${expectedRatio})) <= 1 && Math.abs(c.height - Math.round(c.clientHeight * ${expectedRatio})) <= 1 && window.innerWidth === ${flipped.width}; })()`);
         if (settled) break;
