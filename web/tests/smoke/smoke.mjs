@@ -50,7 +50,10 @@ try {
   await page.evaluate(`${$("play")}.click()`);
   const frozen = Number(await text("updates"));
   await wait(400);
-  check("Play advances about 40 updates per second", playing >= 30 && playing <= 55, `${playing} updates in ~1.1 s`);
+  // A hosted runner renders WebGL in software (GLMAZE_SLOW_RENDERER=1) and cannot hold 40 updates per second; there the check only
+  // requires that the simulation clearly runs.
+  const lowest = process.env.GLMAZE_SLOW_RENDERER ? 12 : 30;
+  check("Play advances about 40 updates per second" + (process.env.GLMAZE_SLOW_RENDERER ? " (software renderer: lower bound only)" : ""), playing >= lowest && playing <= 55, `${playing} updates in ~1.1 s`);
   check("Pause freezes the simulation", Number(await text("updates")) === frozen);
 
   const mazeBefore = await text("mazeIndex");

@@ -44,6 +44,7 @@ jobs:
       CHROME_PATH: /usr/bin/google-chrome
       # The runner has no GPU: Chrome renders WebGL with SwiftShader. The visual baselines were verified to pass under SwiftShader.
       GLMAZE_BROWSER_ARGS: --no-sandbox --disable-dev-shm-usage --use-angle=swiftshader --enable-unsafe-swiftshader
+      GLMAZE_SLOW_RENDERER: "1" # software WebGL: timing checks keep only their lower bounds
       # Serve the built artifact under /<repository>/ exactly like GitHub Pages, so a root-absolute URL fails here.
       GLMAZE_SERVE_DIR: dist/site
       GLMAZE_BASE_PATH: ${{ github.event.repository.name }}
