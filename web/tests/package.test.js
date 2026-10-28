@@ -43,7 +43,7 @@ test("the validator refuses extra files, unapproved or altered images, private m
     ["an altered theme texture", (site) => writeFileSync(join(site, "assets", "themes", "backrooms", "wall.webp"), "tampered")],
     ["an unapproved webp", (site) => writeFileSync(join(site, "assets", "themes", "backrooms", "other.webp"), "x")],
     ["a root-absolute URL", (site) => writeFileSync(join(site, "src", "app.js"), readFileSync(join(site, "src", "app.js"), "utf8") + "\nimport('/src/maze.js');\n")],
-    ["a credential", (site) => writeFileSync(join(site, "src", "settings.js"), readFileSync(join(site, "src", "settings.js"), "utf8") + "\n// BROWSERSTACK_ACCESS_KEY=abcdefghij1234567890\n")],
+    ["a credential", (site) => writeFileSync(join(site, "src", "settings.js"), readFileSync(join(site, "src", "settings.js"), "utf8") + "\n// " + "BROWSERSTACK_ACCESS" + "_KEY=abcdefghij1234567890\n")],
     ["a missing .nojekyll", (site) => rmSync(join(site, ".nojekyll"))],
   ];
   for (const [label, damage] of cases) {
