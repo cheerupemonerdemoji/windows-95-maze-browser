@@ -3,7 +3,7 @@
 **Status: pending.** Nothing on this page has been answered by a person holding a phone. Desktop emulation is *not* a physical-phone
 test and is recorded separately below. Please fill in the table after opening the published page on a real phone.
 
-Published page: **<PAGES URL, filled in after deployment>** (the same URL for every device; use a fresh private tab).
+Published page: **https://cheerupemonerdemoji.github.io/windows-95-maze-browser/** (the same URL for every device; use a fresh private tab).
 
 ## How to run the check (about 7 minutes)
 

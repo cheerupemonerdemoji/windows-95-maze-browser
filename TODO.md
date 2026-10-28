@@ -42,8 +42,9 @@ SDL/OpenGL executable.
 - [ ] Create the application entry point, development server, production build,
       formatting, linting, and type-checking commands. Partial: entry point
       (`web/index.html`), development server (`npm start`) and syntax check
-      (`node --check`) exist; the production build is the static artifact script
-      (see section 8); no formatter, linter or type checker is configured.
+      (`node --check`) exist, and `npm run build` produces and validates the static
+      artifact (the whole production build); no formatter, linter or type checker is
+      configured.
 - [x] Add a responsive full-window canvas with resize and device-pixel-ratio
       handling.
 - [x] Add a deterministic seeded random-number generator and a debug seed input.
@@ -118,23 +119,35 @@ SDL/OpenGL executable.
 - [ ] Document controls, configuration, known differences, evidence confidence,
       licenses, and acknowledgements. Partial: all but the final licence text, which
       waits for the owner's copyright-holder decision (`docs/license-proposal.md`).
-- [ ] Add continuous integration for checks, tests, and a production build.
-- [ ] Publish a static preview and verify it from a clean browser session.
+- [x] Add continuous integration for checks, tests, and a production build
+      (`.github/workflows/web-ci.yml`: Node 20 and 22 unit tests, syntax, repository and
+      artifact checks; Chrome smoke, visual and phone-emulation checks on Linux;
+      Firefox stays a documented local check).
+- [x] Publish a static preview and verify it from a clean browser session
+      (https://cheerupemonerdemoji.github.io/windows-95-maze-browser/; the `pages` workflow
+      deploys it and re-runs the smoke and phone checks against the published URL).
 - [ ] Complete a release checklist covering accessibility, compatibility,
-      performance, asset provenance, and license notices.
+      performance, asset provenance, and license notices. Partial
+      (`docs/release-checklist.md`): pending the owner's physical-phone answers, a
+      BrowserStack run and the copyright-holder name.
 
 ## Definition of done for the first playable release
 
 - [ ] A visitor can open the page and immediately start a deterministic,
-      automatically navigated 3D maze run.
+      automatically navigated 3D maze run. Partial: one press of Play starts it (browsers
+      require a user action); confirmed on desktop and in phone emulation, not yet on a
+      physical phone.
 - [x] The maze is always traversable, movement does not cross walls, and resets
       work repeatedly without reloading the page (unit tests over many seeds and 30
       consecutive resets).
 - [ ] The experience remains smooth at the documented target resolution and
-      hardware tier.
-- [ ] Tests and production builds pass in continuous integration.
+      hardware tier. Partial: the desktop profile meets the target; no phone has been
+      measured.
+- [x] Tests and production builds pass in continuous integration (GitHub Actions on
+      the `fork` remote, run 40622972548 on commit 25e53d7).
 - [ ] All shipped assets and borrowed code have compatible licenses and recorded
-      attribution.
+      attribution. Partial: the assets are all original procedural artwork and
+      attributed; the browser copyright-holder name is still pending.
 - [x] Differences from observed Windows 95 Maze behavior are documented rather
       than presented as verified facts (`docs/original-exit-camera-analysis.md`
       section 8 and `docs/parity-matrix.md`).

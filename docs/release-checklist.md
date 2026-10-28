@@ -11,13 +11,13 @@ Last updated 2026-10-27. Items marked **pending** are blocked on a named input a
 | --- | --- | --- |
 | Unit tests | done | `npm test`, 76 tests (2026-10-27) |
 | Syntax of every module, test and tool | done | CI step `node --check` over `web/` |
-| Chrome smoke checks | done | `npm run smoke`, 33 checks, locally on Windows and in CI on Linux when the first CI run has passed (see section 7) |
+| Chrome smoke checks | done | `npm run smoke`, 33 checks, locally on Windows and in CI on Linux (web-ci run 40622972548) |
 | Firefox checks | done locally; **not run in CI** (reason in section 6) | `npm run smoke:firefox`, 11 checks, Firefox 159.0, 2026-10-27 |
 | Visual regression | done | ten fixed-seed views, `web/tests/visual-baselines/BASELINES.md`; passes on an AMD GPU and under SwiftShader |
 | Static artifact validation | done | `npm run build` validates 12 reachable runtime files, no extra files, relative URLs only, no credentials |
 | No private or Microsoft material in Git or the artifact | done | `npm run validate:repo`, run in CI and before every Pages deployment |
 | Automated phone-viewport checks | done | `npm run smoke:mobile`, 73 checks over three phone profiles in both orientations |
-| GitHub Pages URL works in a clean browser | see `docs/release-notes.md` for the URL and deployment commit | smoke and mobile checks run against the published URL by the `pages` workflow |
+| GitHub Pages URL works in a clean browser | done: https://cheerupemonerdemoji.github.io/windows-95-maze-browser/, deployed from commit 25e53d7 | the `pages` workflow's `verify` job (33 smoke and 73 phone-emulation checks against the published URL) and the same checks from a fresh local Chrome profile on 2026-10-28 |
 | BrowserStack real-device test | **pending**: no account or credentials | `docs/phone-acceptance.md` |
 | Owner's physical-phone check | **pending**: owner answers needed | `docs/phone-acceptance.md` |
 | Licence decision | **partly decided**: the owner chose the root zlib-style terms for `web/` on 2026-10-27; the copyright-holder name is still **pending** and will not be invented | `docs/license-proposal.md` |
@@ -32,7 +32,7 @@ Last updated 2026-10-27. Items marked **pending** are blocked on a named input a
 | Chrome, SwiftShader software rasteriser | 156.0.8078.48 | visual 10/10 | 2026-10-27 | what a GPU-less CI runner uses |
 | Edge, Windows 11 | 155.0.4283.62 | smoke 33/33, visual against the earlier baselines | 2026-10-22 | not re-run on 2026-10-27 |
 | Firefox, Windows 11 | 159.0 | 11/11 | 2026-10-27 | headless over WebDriver BiDi; reads WebGL pixels back instead of screenshots |
-| Chrome on Linux (GitHub-hosted runner) | runner's installed Chrome | see the CI run | pending first run | |
+| Chrome on Linux (GitHub-hosted runner, SwiftShader) | 155.0.8059.39 | smoke 33/33, visual 10/10, phone emulation 73/73, and the same smoke and phone checks against the published URL | 2026-10-28 | web-ci run 40622972548, pages run 40622972536 |
 | Safari on macOS and iOS | not tested | **unknown** | | no Apple device or BrowserStack account available |
 | Chrome on Android | not tested on a real device | **unknown** | | emulation only |
 | Browsers without WebGL 2 | tested by blocking WebGL 2 | debug map shown, first-person button disabled, no errors | 2026-10-27 | Chrome, Edge, Firefox and phone profiles |
@@ -92,7 +92,7 @@ Run it locally before each release: `npm run smoke:firefox`.
 
 1. `npm test`, `npm run validate:repo`, `npm run build`, `npm run smoke`, `npm run visual`, `npm run smoke:mobile`, `npm run smoke:firefox`.
 2. `git diff --check`.
-3. Push to the release branch; the `web-ci` workflow runs the same checks on Linux and the `pages` workflow deploys.
+3. Push to the release branch (`main` of the `fork` remote; never to `origin`, which is upstream); the `web-ci` workflow runs the same checks on Linux and the `pages` workflow deploys.
 4. Read the `verify` job (smoke and mobile checks against the published URL), then open the URL on a phone and fill in
    `docs/phone-acceptance.md`.
 5. Record the URL and deployment commit in `docs/release-notes.md`.

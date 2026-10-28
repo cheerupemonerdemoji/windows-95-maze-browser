@@ -1,6 +1,9 @@
 # Release notes: browser reconstruction 0.1.0 (first playable preview)
 
-Published page: **pending first deployment** (this line is replaced with the final GitHub Pages URL and the deployed commit).
+Published page: **https://cheerupemonerdemoji.github.io/windows-95-maze-browser/**
+Deployed commit: `25e53d79169fa598d7c5a30f6d731c3c16533ff8` on 2026-10-28 (repository `cheerupemonerdemoji/windows-95-maze-browser`, branch `main`;
+the `pages` run 40622972536 built, deployed and verified it, and the same checks were re-run from a fresh local browser profile).
+Later commits that change only documentation do not redeploy the page.
 
 A first-person, automatically navigated 3D maze in the browser, reconstructed from the behaviour of the Windows NT 4.0 OpenGL Maze
 screensaver as recovered by static analysis and Windows 11 captures. It is **not** a claim of complete parity: replacement artwork is used
