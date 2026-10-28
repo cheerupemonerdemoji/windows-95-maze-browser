@@ -1,0 +1,19 @@
+{
+  "name": "glmaze-browser-reconstruction",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node web/server.mjs",
+    "test": "node --test web/tests/*.test.js",
+    "smoke": "node web/tests/smoke/smoke.mjs",
+    "visual": "node web/tests/smoke/visual.mjs",
+    "profile": "node web/tests/smoke/profile.mjs",
+    "smoke:firefox": "node web/tests/smoke/firefox.mjs",
+    "telemetry": "node web/tools/telemetry.mjs",
+    "build": "node web/tools/package.mjs build",
+    "validate:static": "node web/tools/package.mjs validate",
+    "validate:repo": "node web/tools/package.mjs repo",
+    "check": "node --check web/server.mjs && node web/tools/package.mjs repo",
+    "smoke:mobile": "node web/tests/smoke/mobile.mjs"
+  }
+}

@@ -1,0 +1,77 @@
+name: web-ci
+
+# Verifies the dependency-free static browser reconstruction. There is no bundler: "production build" means copying the runtime
+# files reachable from web/index.html into dist/site and validating that artifact (web/tools/package.mjs). Private captures, the
+# Microsoft screensaver and credentials are never used here, and the repository check fails if any are tracked.
+on:
+  push:
+    paths: ["web/**", "package.json", ".github/workflows/web-ci.yml", ".github/workflows/pages.yml"]
+  pull_request:
+    paths: ["web/**", "package.json", ".github/workflows/web-ci.yml", ".github/workflows/pages.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: unit tests, syntax, repository and artifact checks (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [20, 22]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      # Dependency-free: no install step.
+      - name: JavaScript syntax (every module, test and tool)
+        run: find web -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | xargs -0 -n1 node --check
+      - name: Unit tests
+        run: npm test
+      - name: No private or Microsoft material is tracked
+        run: npm run validate:repo
+      - name: Build and validate the static artifact
+        run: npm run build
+
+  browser:
+    name: Chrome smoke, visual and mobile-emulation checks (built artifact under a sub-path)
+    needs: checks
+    runs-on: ubuntu-latest
+    env:
+      CHROME_PATH: /usr/bin/google-chrome
+      # The runner has no GPU: Chrome renders WebGL with SwiftShader. The visual baselines were verified to pass under SwiftShader.
+      GLMAZE_BROWSER_ARGS: --no-sandbox --disable-dev-shm-usage --use-angle=swiftshader --enable-unsafe-swiftshader
+      # Serve the built artifact under /<repository>/ exactly like GitHub Pages, so a root-absolute URL fails here.
+      GLMAZE_SERVE_DIR: dist/site
+      GLMAZE_BASE_PATH: ${{ github.event.repository.name }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Build the static artifact
+        run: npm run build
+      - name: Browser version
+        run: google-chrome --version
+      - name: Desktop smoke checks
+        run: npm run smoke
+      - name: Visual regression
+        run: npm run visual
+      - name: Phone-sized viewport emulation (not a physical-phone test)
+        run: npm run smoke:mobile
+      - name: Capture the current frames when the visual check fails
+        if: failure()
+        run: npm run visual -- --capture visual-actual || true
+      - name: Upload the actual frames (project-generated images only)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-actual
+          path: visual-actual
+          if-no-files-found: ignore
+
+# Firefox (npm run smoke:firefox) stays a documented local check: it drives a headless Firefox over WebDriver BiDi and has only
+# been verified on the project owner's Windows machine, so a hosted run could not be trusted either way. See docs/release-checklist.md.

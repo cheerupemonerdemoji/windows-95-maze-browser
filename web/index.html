@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>GLMaze Browser Reconstruction</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <p class="eyebrow">Windows 95 Maze · browser reconstruction</p>
+        <h1>Deterministic maze lab</h1>
+        <p class="lede">A testable first slice of GLMaze’s generation and automatic navigation rules.</p>
+      </div>
+      <div class="legend" aria-label="Maze legend">
+        <span><i class="start"></i> Start</span><span><i class="finish"></i> Finish</span><span><i class="twister"></i> Twister</span>
+      </div>
+    </header>
+
+    <section class="workspace" aria-label="Maze simulator">
+      <div class="canvas-shell" id="canvasShell">
+        <canvas id="webglCanvas" role="img" aria-label="First-person 3D view of the generated maze from the automatic walker. The 3D image is not fully accessible; use the debug map and live evidence for state."></canvas>
+        <canvas id="mazeCanvas" role="img" aria-label="Top-down generated maze and automatic walker" hidden></canvas>
+        <div class="view-switch" role="group" aria-label="View">
+          <button id="viewFirst" type="button" aria-pressed="true">First person</button>
+          <button id="viewMap" type="button" aria-pressed="false">Debug map</button>
+          <button id="fullscreen" type="button">Fullscreen</button>
+        </div>
+      </div>
+
+      <aside>
+        <section class="panel controls">
+          <h2>Run controls</h2>
+          <label for="seed">Seed</label>
+          <div class="input-row">
+            <input id="seed" type="text" maxlength="80" autocomplete="off" spellcheck="false">
+            <button id="regenerate" type="button">Generate</button>
+          </div>
+          <label for="rngMode">Random generator</label>
+          <select id="rngMode">
+            <option value="microsoft" selected>Microsoft-compatible</option>
+            <option value="portable">Portable debug mode</option>
+          </select>
+          <label for="quality">Render quality</label>
+          <select id="quality">
+            <option value="high" selected>High (device pixels)</option>
+            <option value="standard">Standard (1 pixel per CSS pixel)</option>
+            <option value="turbo">Turbo look (320×200, observed in the original)</option>
+          </select>
+          <div class="checks">
+            <label class="check"><input id="reducedMotion" type="checkbox"> Reduce motion</label>
+            <label class="check"><input id="objectsFlag" type="checkbox" checked> Trigger solids (restarts the run)</label>
+            <label class="check"><input id="markersFlag" type="checkbox"> Start and exit markers (experimental artwork)</label>
+            <label class="check"><input id="picturesFlag" type="checkbox"> Picture walls (experimental)</label>
+            <label class="check"><input id="logosFlag" type="checkbox"> Logo objects (experimental)</label>
+            <label class="check"><input id="ratsFlag" type="checkbox"> Rat (experimental, restarts the run)</label>
+          </div>
+          <div class="button-row">
+            <button id="play" class="primary" type="button" aria-pressed="false">Play</button>
+            <button id="step" type="button">Step 25 ms</button>
+          </div>
+          <p class="hint"><strong>Measured WoW64 cadence:</strong> fixed 25 ms updates and 18 updates per movement or turn. The run restarts automatically with a new maze after the exit.</p>
+          <button id="exportRun" class="wide" type="button">Export evidence JSON</button>
+          <p class="hint">The seed and random-generator mode are saved in the URL so the same maze can be reopened.</p>
+        </section>
+
+        <section class="panel">
+          <h2>Live evidence</h2>
+          <dl class="metrics">
+            <div><dt>Cell</dt><dd id="position">0, 0</dd></div>
+            <div><dt>Heading</dt><dd id="direction">right</dd></div>
+            <div><dt>Route rule</dt><dd id="handedness">—</dd></div>
+            <div><dt>Moves</dt><dd id="steps">0</dd></div>
+            <div><dt>Updates</dt><dd id="updates">0</dd></div>
+            <div><dt>Sim time</dt><dd id="simulationTime">0 ms</dd></div>
+            <div><dt>Turns</dt><dd id="turns">0</dd></div>
+            <div><dt>Dead ends</dt><dd id="deadEnds">0</dd></div>
+            <div><dt>Twisters</dt><dd id="twisters">0</dd></div>
+            <div><dt>Elapsed</dt><dd id="elapsed">0.0s</dd></div>
+            <div><dt>World</dt><dd id="world">upright</dd></div>
+            <div><dt>Maze</dt><dd id="mazeIndex">1</dd></div>
+            <div><dt>Phase</dt><dd id="phase">entrance</dd></div>
+          </dl>
+        </section>
+
+        <section class="panel log-panel">
+          <h2>Event log</h2>
+          <ol id="eventLog" class="event-log"></ol>
+        </section>
+      </aside>
+    </section>
+    <p id="announcement" class="sr-only" aria-live="polite"></p>
+  </main>
+  <script type="module" src="./src/app.js"></script>
+</body>
+</html>

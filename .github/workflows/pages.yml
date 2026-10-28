@@ -1,0 +1,75 @@
+name: pages
+
+# Publishes the static runtime (only the files reachable from web/index.html) with GitHub's Pages artifact and deployment actions.
+# Runs on every push to the release branch and on demand. Tests, docs, tools and private evidence never enter the artifact; the build
+# step fails if any file other than runtime code is present or if any URL is not relative (so the site works under /<repository>/).
+on:
+  push:
+    branches: [main]
+    paths: ["web/**", "package.json", ".github/workflows/pages.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Unit tests
+        run: npm test
+      - name: No private or Microsoft material is tracked
+        run: npm run validate:repo
+      - name: Build and validate the static artifact
+        run: npm run build
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    outputs:
+      page_url: ${{ steps.deployment.outputs.page_url }}
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
+
+  verify:
+    name: verify the published site in a fresh browser profile
+    needs: deploy
+    runs-on: ubuntu-latest
+    env:
+      CHROME_PATH: /usr/bin/google-chrome
+      GLMAZE_BROWSER_ARGS: --no-sandbox --disable-dev-shm-usage --use-angle=swiftshader --enable-unsafe-swiftshader
+      GLMAZE_BASE_URL: ${{ needs.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Wait for the site to answer
+        run: |
+          for i in $(seq 1 30); do
+            if curl -fsS -o /dev/null "$GLMAZE_BASE_URL"; then exit 0; fi
+            sleep 5
+          done
+          echo "the published site did not answer"; exit 1
+      - name: Desktop smoke checks against the published URL
+        run: npm run smoke
+      - name: Phone-sized viewport emulation against the published URL
+        run: npm run smoke:mobile

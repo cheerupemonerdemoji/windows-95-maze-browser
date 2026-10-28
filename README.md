@@ -7,6 +7,47 @@
 
 GLMaze is a cross-platform clone of the classic Windows 95 3D maze screensaver.
 
+Planning a browser-native reconstruction? See the
+[Windows 95 Maze — Browser Reconstruction checklist](TODO.md).
+
+## Browser reconstruction
+
+**Live page:** https://cheerupemonerdemoji.github.io/windows-95-maze-browser/ (GitHub Pages; the page needs WebGL 2 for the
+first-person view and falls back to a top-down debug map without it).
+
+The `web` folder contains a dependency-free (static ES modules, WebGL 2, no bundler) browser reconstruction of the Windows 95 Maze
+behaviour, built from the recovered generator, route and camera rules rather than from Microsoft's code or artwork. It is a **first
+playable preview and not a claim of complete parity**: the textures, Start sign and smiley are original procedural stand-ins and
+several details are still unknown (listed in [the parity matrix](docs/parity-matrix.md) and
+[the analysis dossier](docs/original-exit-camera-analysis.md)).
+
+* 12×12 randomized-Kruskal maze, Microsoft-compatible random stream with a 10-value warm-up (selectable; a portable stream remains
+  as a debug mode), random entrance and exit rows, and the recovered left- or right-hand route rule. The same seed gives the same run.
+* Recovered camera and world: cubic cells, 90° vertical field of view at aspect 1.0, the camera on the midpoint of the edge it
+  entered a cell by, 18-update moves and turns on a fixed 25 ms step (450 ms nominal), walls that grow and shrink at the entrance
+  and exit, and a new maze after every exit without reloading.
+* Trigger solids with the recovered 18-update scene roll, experimental flags for marker artwork, picture walls, logo objects and a
+  rat, a Turbo 320×200 look, reduced motion, fullscreen, and a JSON/NDJSON evidence export.
+
+With Node.js 20 or newer installed (there is nothing to install):
+
+```powershell
+npm test                # unit tests
+npm start               # http://127.0.0.1:8080
+npm run build           # static artifact in dist/site, validated (this is the whole "production build")
+npm run smoke           # Chrome or Edge behaviour checks (dev tool; set CHROME_PATH if needed)
+npm run visual          # fixed-seed screenshot comparison
+npm run smoke:mobile    # phone-sized viewport emulation (not a physical-phone test)
+npm run smoke:firefox   # Firefox checks over WebDriver BiDi (local only)
+npm run telemetry -- --seed 2017 --updates 3000   # deterministic per-update evidence export
+```
+
+Settings and seeds live in the URL and the browser's local storage; nothing is collected. See
+[the release checklist](docs/release-checklist.md), [the release notes](docs/release-notes.md),
+[browser maze generation and navigation](docs/browser-maze-generation.md) and [the phone acceptance page](docs/phone-acceptance.md).
+The browser work follows the root zlib-style licence terms; the copyright-holder name for it is still to be chosen
+([licence proposal](docs/license-proposal.md)). GLMaze's native game, below, is unchanged by this work.
+
 Be mesmerized as you walk through the seemingly endless maze, trying to find the exit. Pass a pyramid to turn your world upside down, but watch out for the puddles of water on the ground. You can even enter night vision to make you feel like a real spy.
 
 ![Screenshot with Nightvision](https://images.ulti.tech/glmaze/glmaze_github1.jpg)
