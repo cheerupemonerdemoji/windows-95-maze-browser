@@ -18,7 +18,7 @@ Last updated 2026-10-27. Items marked **pending** are blocked on a named input a
 | Static artifact validation | done | `npm run build` validates 12 reachable runtime files, no extra files, relative URLs only, no credentials |
 | No private or Microsoft material in Git or the artifact | done | `npm run validate:repo`, run in CI and before every Pages deployment |
 | Automated phone-viewport checks | done | `npm run smoke:mobile`, 79 checks over three phone profiles in both orientations, including the Appearance tab |
-| GitHub Pages URL works in a clean browser | done: https://cheerupemonerdemoji.github.io/windows-95-maze-browser/, deployed from commit 25e53d7 | the `pages` workflow's `verify` job (33 smoke and 73 phone-emulation checks against the published URL) and the same checks from a fresh local Chrome profile on 2026-10-28 |
+| GitHub Pages URL works in a clean browser | done: https://cheerupemonerdemoji.github.io/windows-95-maze-browser/, deployed from commit 861a059 | the `pages` workflow's `verify` job (33 smoke, 79 phone-emulation and 42 Appearance checks against the published URL) and the same checks from a fresh local Chrome profile on 2026-10-28 |
 | BrowserStack real-device test | **pending**: no account or credentials | `docs/phone-acceptance.md` |
 | Owner's physical-phone check | **pending**: owner answers needed | `docs/phone-acceptance.md` |
 | Licence decision | **partly decided**: the owner chose the root zlib-style terms for `web/` on 2026-10-27; the copyright-holder name is still **pending** and will not be invented | `docs/license-proposal.md` |

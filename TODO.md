@@ -155,7 +155,7 @@ SDL/OpenGL executable.
       hardware tier. Partial: the desktop profile meets the target; no phone has been
       measured.
 - [x] Tests and production builds pass in continuous integration (GitHub Actions on
-      the `fork` remote, run 40622972548 on commit 25e53d7).
+      the `fork` remote, run 40627353737 on the Appearance branch, then 40627692439 on main).
 - [ ] All shipped assets and borrowed code have compatible licenses and recorded
       attribution. Partial: the assets are all original procedural artwork and
       attributed; the browser copyright-holder name is still pending.
