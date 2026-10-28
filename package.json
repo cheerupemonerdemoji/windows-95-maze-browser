@@ -14,6 +14,7 @@
     "validate:static": "node web/tools/package.mjs validate",
     "validate:repo": "node web/tools/package.mjs repo",
     "check": "node --check web/server.mjs && node web/tools/package.mjs repo",
-    "smoke:mobile": "node web/tests/smoke/mobile.mjs"
+    "smoke:mobile": "node web/tests/smoke/mobile.mjs",
+    "smoke:appearance": "node web/tests/smoke/appearance.mjs"
   }
 }

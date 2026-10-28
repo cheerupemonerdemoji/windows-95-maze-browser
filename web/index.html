@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark">
   <title>GLMaze Browser Reconstruction</title>
+  <link rel="icon" href="data:,">
   <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
@@ -32,7 +33,11 @@
       </div>
 
       <aside>
-        <section class="panel controls">
+        <div class="tabs" role="tablist" aria-label="Control panels">
+          <button id="tabControls" class="tab" type="button" role="tab" aria-selected="true" aria-controls="panelControls">Run controls</button>
+          <button id="tabAppearance" class="tab" type="button" role="tab" aria-selected="false" aria-controls="panelAppearance" tabindex="-1">Appearance</button>
+        </div>
+        <section id="panelControls" class="panel controls" role="tabpanel" aria-labelledby="tabControls">
           <h2>Run controls</h2>
           <label for="seed">Seed</label>
           <div class="input-row">
@@ -65,6 +70,43 @@
           <p class="hint"><strong>Measured WoW64 cadence:</strong> fixed 25 ms updates and 18 updates per movement or turn. The run restarts automatically with a new maze after the exit.</p>
           <button id="exportRun" class="wide" type="button">Export evidence JSON</button>
           <p class="hint">The seed and random-generator mode are saved in the URL so the same maze can be reopened.</p>
+        </section>
+
+        <section id="panelAppearance" class="panel controls appearance" role="tabpanel" aria-labelledby="tabAppearance" hidden>
+          <h2>Appearance</h2>
+          <fieldset class="theme-choice">
+            <legend>Texture theme</legend>
+            <label class="check"><input id="themeClassic" type="radio" name="theme" value="classic"> Classic (the faithful default)</label>
+            <label class="check"><input id="themeBackrooms" type="radio" name="theme" value="backrooms"> Backrooms-inspired (original optional artwork)</label>
+            <label class="check"><input id="themeCustom" type="radio" name="theme" value="custom"> Custom (your own images)</label>
+          </fieldset>
+          <fieldset class="slot" id="slotWall">
+            <legend>Wall texture</legend>
+            <canvas id="previewWall" class="preview" width="64" height="64" role="img" aria-label="Wall texture preview: Classic"></canvas>
+            <label for="fileWall">Choose a wall image (PNG, JPEG or WebP, up to 10 MB)</label>
+            <input id="fileWall" type="file" accept="image/png,image/jpeg,image/webp">
+            <button id="removeWall" type="button" disabled>Remove wall image</button>
+          </fieldset>
+          <fieldset class="slot" id="slotFloor">
+            <legend>Floor texture</legend>
+            <canvas id="previewFloor" class="preview" width="64" height="64" role="img" aria-label="Floor texture preview: Classic"></canvas>
+            <label for="fileFloor">Choose a floor image (PNG, JPEG or WebP, up to 10 MB)</label>
+            <input id="fileFloor" type="file" accept="image/png,image/jpeg,image/webp">
+            <button id="removeFloor" type="button" disabled>Remove floor image</button>
+          </fieldset>
+          <fieldset class="slot" id="slotCeiling">
+            <legend>Ceiling texture</legend>
+            <canvas id="previewCeiling" class="preview" width="64" height="64" role="img" aria-label="Ceiling texture preview: Classic"></canvas>
+            <label for="fileCeiling">Choose a ceiling image (PNG, JPEG or WebP, up to 10 MB)</label>
+            <input id="fileCeiling" type="file" accept="image/png,image/jpeg,image/webp">
+            <button id="removeCeiling" type="button" disabled>Remove ceiling image</button>
+          </fieldset>
+          <div class="button-row">
+            <button id="appearanceReset" type="button">Reset to Classic</button>
+            <button id="appearanceClear" type="button">Clear stored images</button>
+          </div>
+          <p id="appearanceStatus" class="status" role="status" aria-live="polite">Classic textures.</p>
+          <p class="hint"><strong>Privacy:</strong> your images stay in this browser and are never uploaded. A resized copy is kept in this browser's local storage (IndexedDB) so it comes back next time; use “Clear stored images” to delete it. Images that tile cleanly need to be seamless squares; other pictures are stretched to a square and will show seams. Themes only change the picture on the walls, floor and ceiling; the maze, timing and camera do not change.</p>
         </section>
 
         <section class="panel">

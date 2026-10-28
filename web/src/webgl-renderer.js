@@ -116,6 +116,9 @@ export class WebGLMazeRenderer {
     this.maze = null;
     this.geometry = null;
     this.resources = null;
+    this.liveTextures = 0;
+    this.theme = { walls: null, floor: null, ceiling: null }; // GL textures of the active theme (null = classic)
+    this.themeData = { walls: null, floor: null, ceiling: null }; // their pixels, kept so a lost context can be restored
     this.aspect = 1;
     this.proj = new Float32Array(16);
     this.view = new Float32Array(16);
@@ -137,11 +140,14 @@ export class WebGLMazeRenderer {
       event.preventDefault();
       this.contextLost = true;
       this.resources = null; // all GL objects died with the context
+      this.liveTextures = 0;
+      this.theme = { walls: null, floor: null, ceiling: null };
       this.onContextLost?.();
     };
     this.handleRestored = () => {
       try {
         this.createResources();
+        this.uploadThemeTextures();
         if (this.maze) this.uploadGeometry();
         this.contextLost = false;
       } catch (error) {
@@ -154,6 +160,57 @@ export class WebGLMazeRenderer {
     canvas.addEventListener("webglcontextlost", this.handleLost);
     canvas.addEventListener("webglcontextrestored", this.handleRestored);
     this.createResources();
+  }
+
+  /**
+   * Creates one texture with the original sampling state. Observation (0x1003f5c): GL_NEAREST for both minification and
+   * magnification, repeat in S and T, no mipmaps. Themes reuse this, so they keep the original filtering and repeat behaviour.
+   */
+  makeTexture({ width, height, data }) {
+    const gl = this.gl;
+    const texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, data);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+    this.liveTextures += 1;
+    return texture;
+  }
+
+  deleteTexture(texture) {
+    if (!texture) return;
+    this.gl.deleteTexture(texture);
+    this.liveTextures = Math.max(0, this.liveTextures - 1);
+  }
+
+  /**
+   * Replaces the wall, floor and ceiling textures with theme images (each {width, height, data: RGBA bytes}) or restores a
+   * classic one with null. Called only when a theme is selected or restored, never per frame. The superseded GL textures are
+   * deleted and the pixel data is kept only for the active theme so a lost context can be restored.
+   */
+  setThemeTextures({ wall = null, floor = null, ceiling = null } = {}) {
+    const incoming = { walls: wall, floor, ceiling };
+    for (const slot of ["walls", "floor", "ceiling"]) {
+      this.deleteTexture(this.theme[slot]);
+      this.theme[slot] = null;
+      this.themeData[slot] = incoming[slot];
+    }
+    if (!this.contextLost && this.resources) this.uploadThemeTextures();
+  }
+
+  uploadThemeTextures() {
+    for (const slot of ["walls", "floor", "ceiling"]) {
+      if (this.themeData[slot] && !this.theme[slot]) this.theme[slot] = this.makeTexture(this.themeData[slot]);
+    }
+  }
+
+  /** Live GL texture count and an estimate of the GPU bytes held by theme textures (RGBA8, no mipmaps). */
+  textureStats() {
+    let themeBytes = 0;
+    for (const slot of ["walls", "floor", "ceiling"]) if (this.theme[slot]) themeBytes += this.themeData[slot].width * this.themeData[slot].height * 4;
+    return { live: this.liveTextures, themeBytes };
   }
 
   createResources() {
@@ -175,17 +232,7 @@ export class WebGLMazeRenderer {
       throw new Error(`Program link failed: ${log}`);
     }
     const uniform = (name) => gl.getUniformLocation(program, name);
-    const makeTexture = ({ width, height, data }) => {
-      const texture = gl.createTexture();
-      gl.bindTexture(gl.TEXTURE_2D, texture);
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, data);
-      // Observation (0x1003f5c): GL_NEAREST for both minification and magnification, repeat in S and T, no mipmaps.
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
-      return texture;
-    };
+    const makeTexture = (spec) => this.makeTexture(spec);
     this.resources = {
       program,
       uniforms: {
@@ -362,14 +409,14 @@ export class WebGLMazeRenderer {
     const { ranges } = this.geometry;
     gl.uniformMatrix4fv(uniforms.model, false, this.wallModel);
     gl.disable(gl.CULL_FACE); // shared walls are double-sided
-    gl.bindTexture(gl.TEXTURE_2D, textures.walls);
+    gl.bindTexture(gl.TEXTURE_2D, this.theme.walls ?? textures.walls);
     gl.drawElements(gl.TRIANGLES, ranges.sharedWalls.count, gl.UNSIGNED_INT, ranges.sharedWalls.start * 4);
     gl.enable(gl.CULL_FACE); // the closed entrance and exit boundary walls are single-sided: invisible from behind
     gl.drawElements(gl.TRIANGLES, ranges.boundaryWalls.count, gl.UNSIGNED_INT, ranges.boundaryWalls.start * 4);
     gl.uniformMatrix4fv(uniforms.model, false, this.identity); // floor and ceiling are single-sided
-    gl.bindTexture(gl.TEXTURE_2D, textures.floor);
+    gl.bindTexture(gl.TEXTURE_2D, this.theme.floor ?? textures.floor);
     gl.drawElements(gl.TRIANGLES, ranges.floor.count, gl.UNSIGNED_INT, ranges.floor.start * 4);
-    gl.bindTexture(gl.TEXTURE_2D, textures.ceiling);
+    gl.bindTexture(gl.TEXTURE_2D, this.theme.ceiling ?? textures.ceiling);
     gl.drawElements(gl.TRIANGLES, ranges.ceiling.count, gl.UNSIGNED_INT, ranges.ceiling.start * 4);
 
     if (this.picturesEnabled && ranges.pictures.count > 0) {
@@ -443,7 +490,8 @@ export class WebGLMazeRenderer {
     const r = this.resources;
     if (!r || this.contextLost) return;
     gl.deleteProgram(r.program);
-    for (const texture of Object.values(r.textures)) gl.deleteTexture(texture);
+    for (const texture of Object.values(r.textures)) this.deleteTexture(texture);
+    for (const slot of ["walls", "floor", "ceiling"]) { this.deleteTexture(this.theme[slot]); this.theme[slot] = null; this.themeData[slot] = null; } // release the active theme
     gl.deleteVertexArray(r.vao);
     gl.deleteVertexArray(r.solidVao);
     gl.deleteVertexArray(r.spriteVao);
@@ -458,6 +506,7 @@ export class WebGLMazeRenderer {
     this.canvas.removeEventListener("webglcontextlost", this.handleLost);
     this.canvas.removeEventListener("webglcontextrestored", this.handleRestored);
     this.disposeResources();
+    this.themeData = { walls: null, floor: null, ceiling: null };
     this.geometry = null;
     this.maze = null;
   }

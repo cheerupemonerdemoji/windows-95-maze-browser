@@ -1,6 +1,6 @@
 # Visual baselines: record of accepted changes
 
-All images are produced from this project's own procedural textures; none contains Microsoft artwork. `environment.json` (written by
+All images come from this project's own procedural textures, its original generated theme images or synthetic textures; none contains Microsoft artwork. `environment.json` (written by
 `npm run visual -- --update`) records the browser, GPU backend, viewport and device pixel ratio of the accepted set.
 
 Accepted set of 2026-10-27: Chrome 156.0.8078.48 headless, ANGLE on an AMD Radeon RX 5700 XT (Direct3D 11), WebGL 2.0, viewport
@@ -49,3 +49,14 @@ renderer regression was found. Evidence (diff sheets were kept privately in the 
 Reviewed by eye on 2026-10-27: every frame shows the intended content (walls growing during the entrance, quarter turn, snap, reversal
 in a dead end, straight corridor, the Start sign low in the growing maze, the smiley low in the shrinking maze with the black void
 above the shrunken walls).
+
+## Theme baselines added 2026-10-28
+
+Two baselines were added without touching the ten Classic ones (the Classic rendering does not change, so `git` shows only two new files):
+
+| Baseline | What it shows | Notes |
+| --- | --- | --- |
+| `backrooms-straight` | the Backrooms-inspired theme at update 87 of seed 1 (same pose as `straight-mid`), objects off | the three built-in WebP textures; the capture waits for the theme status before stepping |
+| `custom-synthetic` | the Custom theme with three deterministic synthetic 512 x 512 PNGs generated in the page (grids and squares from integer geometry, brick red wall, blue floor, green ceiling) at the same pose | goes through the real upload path (file input, validation, decode, upload); no private or user image is ever used or committed |
+
+Both were captured on the environment recorded in `environment.json` (Chrome 156.0.8078.48, AMD Radeon RX 5700 XT) and pass under SwiftShader (mean difference 0.78 and 0.34). Every view now loads with an explicit `theme=` parameter so a stored theme can never leak into a baseline.

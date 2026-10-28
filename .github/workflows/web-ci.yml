@@ -62,6 +62,8 @@ jobs:
         run: npm run visual
       - name: Phone-sized viewport emulation (not a physical-phone test)
         run: npm run smoke:mobile
+      - name: Appearance tab, themes, custom uploads, privacy and resource-leak checks
+        run: npm run smoke:appearance
       - name: Capture the current frames when the visual check fails
         if: failure()
         run: npm run visual -- --capture visual-actual || true

@@ -69,6 +69,31 @@ try {
       check(`${label}: canvas backing store is CSS size x ${expectedRatio}`, Math.abs(layout.backing[0] - Math.round(layout.canvasCss[0] * expectedRatio)) <= 1 && Math.abs(layout.backing[1] - Math.round(layout.canvasCss[1] * expectedRatio)) <= 1, JSON.stringify({ css: layout.canvasCss, backing: layout.backing }));
       check(`${label}: every control is at least ${MIN_TOUCH} CSS px in both directions`, layout.small.length === 0, layout.small.slice(0, 6).join("; "));
 
+      // Appearance tab: it opens, fits the width, and every control is a comfortable touch target in this orientation.
+      await page.evaluate(`${$("tabAppearance")}.click()`);
+      await wait(250);
+      const appearance = await page.evaluate(`(() => {
+        const small = [];
+        for (const el of document.querySelectorAll('#panelAppearance button, #panelAppearance select, #panelAppearance input:not([type=radio]):not([type=checkbox]), #panelAppearance label.check, .tab' /* a radio or checkbox is operated through its 44 px label row */)) {
+          const r = el.getBoundingClientRect();
+          if (r.width === 0 || r.height === 0) continue;
+          if (r.height < ${MIN_TOUCH} - 0.5 || r.width < ${MIN_TOUCH} - 0.5) small.push((el.id || el.textContent.trim().slice(0, 18)) + ' ' + Math.round(r.width) + 'x' + Math.round(r.height));
+        }
+        const panel = document.getElementById('panelAppearance').getBoundingClientRect();
+        return { small, overflow: document.documentElement.scrollWidth - window.innerWidth, panelWidth: Math.round(panel.width), shown: !document.getElementById('panelAppearance').hidden, selected: document.getElementById('tabAppearance').getAttribute('aria-selected') };
+      })()`);
+      check(`${label}: the Appearance tab opens, fits the width and every control is at least ${MIN_TOUCH} CSS px`, appearance.shown && appearance.selected === "true" && appearance.overflow <= 1 && appearance.small.length === 0, JSON.stringify(appearance));
+      if (process.env.MOBILE_SHOTS) {
+        mkdirSync(process.env.MOBILE_SHOTS, { recursive: true });
+        await page.evaluate("document.getElementById('panelAppearance').scrollIntoView()");
+        await wait(150);
+        const shotA = await page.send("Page.captureScreenshot", { format: "png" });
+        writeFileSync(join(process.env.MOBILE_SHOTS, label.replace(/ /g, "-") + "-appearance.png"), Buffer.from(shotA.data, "base64"));
+        await page.evaluate("window.scrollTo(0, 0)");
+      }
+      await page.evaluate(`${$("tabControls")}.click()`);
+      await wait(150);
+
       if (process.env.MOBILE_SHOTS) {
         mkdirSync(process.env.MOBILE_SHOTS, { recursive: true });
         const shot = await page.send("Page.captureScreenshot", { format: "png" });

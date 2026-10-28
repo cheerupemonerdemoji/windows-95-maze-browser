@@ -1,0 +1,62 @@
+[
+  {
+    "texture": "wall",
+    "source": "1254x1254",
+    "sourceBytes": 2875743,
+    "sourceSeamScore": 1.39,
+    "crop": {
+      "x": 24,
+      "y": 12,
+      "size": 1226
+    },
+    "cropSeamScore": 1.02,
+    "healedSeamScore": 0.04,
+    "output": {
+      "file": "wall.webp",
+      "size": 512,
+      "format": "webp",
+      "bytes": 65220,
+      "sha256": "1b536b694def7fe300acafc9d9012b6d76f437e0685564718671f7807a2ea7a7"
+    }
+  },
+  {
+    "texture": "floor",
+    "source": "1254x1254",
+    "sourceBytes": 3903689,
+    "sourceSeamScore": 1.91,
+    "crop": {
+      "x": 0,
+      "y": 0,
+      "size": 1254
+    },
+    "cropSeamScore": 1.91,
+    "healedSeamScore": 0.07,
+    "output": {
+      "file": "floor.webp",
+      "size": 512,
+      "format": "webp",
+      "bytes": 133392,
+      "sha256": "23b414056c7f1078577eab45a3521d189fc0c10077c298713957949e3c4e670c"
+    }
+  },
+  {
+    "texture": "ceiling",
+    "source": "1254x1254",
+    "sourceBytes": 3067039,
+    "sourceSeamScore": 1.37,
+    "crop": {
+      "x": 12,
+      "y": 0,
+      "size": 1226
+    },
+    "cropSeamScore": 1.08,
+    "healedSeamScore": 0.04,
+    "output": {
+      "file": "ceiling.webp",
+      "size": 512,
+      "format": "webp",
+      "bytes": 83532,
+      "sha256": "c1192a2280fe3f3aec3229c427bf50347d6c23d96664ee361df404c281e5a9b9"
+    }
+  }
+]

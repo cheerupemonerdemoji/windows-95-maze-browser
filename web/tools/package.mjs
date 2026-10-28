@@ -4,6 +4,7 @@
 //   node web/tools/package.mjs validate [outDir]   validate an existing artifact
 //   node web/tools/package.mjs repo                check the tracked files for private or Microsoft material
 // Exit status 1 means a check failed; every failure is printed.
+import { createHash } from "node:crypto";
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { dirname, extname, join, normalize, relative, resolve, sep } from "node:path";
@@ -12,9 +13,16 @@ import { fileURLToPath } from "node:url";
 const webRoot = fileURLToPath(new URL("../", import.meta.url));
 const repoRoot = resolve(webRoot, "..");
 const ENTRY = "index.html";
-const ALLOWED_EXTENSIONS = new Set([".html", ".css", ".js"]);
+const ALLOWED_EXTENSIONS = new Set([".html", ".css", ".js", ".webp"]);
+// The only binary assets that may be published: the Backrooms-inspired theme textures listed, with their SHA-256, in
+// web/assets/themes/backrooms/manifest.json. They are original images generated for this project.
+const APPROVED_ASSET_DIR = "assets/themes/backrooms/";
+function approvedAssetHashes() {
+  const manifest = JSON.parse(readFileSync(join(webRoot, APPROVED_ASSET_DIR, "manifest.json"), "utf8"));
+  return new Map(manifest.map((entry) => [entry.output.file, entry.output.sha256]));
+}
 const ALLOWED_DOTFILES = new Set([".nojekyll"]);
-const LIMITS = { totalBytes: 400 * 1024, fileBytes: 120 * 1024, files: 40 };
+const LIMITS = { totalBytes: 700 * 1024, fileBytes: 160 * 1024, files: 40 };
 // Extensions and names that must never be tracked or published: the Microsoft screensaver and anything that could carry its
 // artwork, recordings, archives, and credential files.
 const FORBIDDEN_EXTENSIONS = new Set([".scr", ".exe", ".dll", ".sys", ".msi", ".mkv", ".mp4", ".mov", ".avi", ".webm", ".zip", ".7z", ".rar", ".bmp", ".ico", ".cur", ".ani"]);
@@ -58,6 +66,7 @@ function referencesOf(file, text) {
   } else if (ext === ".js") {
     for (const match of text.matchAll(/\bimport\s*(?:[^'"()]*?\bfrom\s*)?['"]([^'"]+)['"]/g)) refs.push({ kind: "import", value: match[1] });
     for (const match of text.matchAll(/\bimport\s*\(\s*['"]([^'"]+)['"]\s*\)/g)) refs.push({ kind: "import", value: match[1] });
+    for (const match of text.matchAll(/["'`](\.\/assets\/[A-Za-z0-9_./-]+)["'`]/g)) refs.push({ kind: "asset", value: match[1] });
     for (const match of text.matchAll(/\bnew Worker\(\s*['"]([^'"]+)['"]/g)) refs.push({ kind: "worker", value: match[1] });
     for (const match of text.matchAll(/\bfetch\(\s*['"]([^'"]+)['"]/g)) refs.push({ kind: "fetch", value: match[1] });
   }
@@ -74,6 +83,7 @@ function reachableFiles(root, label) {
     const full = join(root, file);
     if (!existsSync(full) || !statSync(full).isFile()) { fail(`${label}: missing file ${file}`); continue; }
     seen.add(file);
+    if (extname(file) === ".webp") continue;
     const text = readFileSync(full, "utf8");
     for (const ref of referencesOf(file, text)) {
       if (isAbsoluteReference(ref.value)) {
@@ -83,7 +93,8 @@ function reachableFiles(root, label) {
       }
       const clean = ref.value.split("#")[0].split("?")[0];
       if (clean === "") continue;
-      const target = resolveReference(file, clean);
+      // Theme asset URLs are resolved against the page (document.baseURI), not against the module that names them.
+      const target = ref.kind === "asset" ? toPosix(normalize(clean)) : resolveReference(file, clean);
       if (target === null) { fail(`${label}: ${file} references "${ref.value}" outside the package`); continue; }
       queue.push(target);
     }
@@ -111,6 +122,11 @@ function validateArtifact(dir) {
     const size = statSync(join(dir, file)).size;
     total += size;
     if (ALLOWED_DOTFILES.has(name)) continue;
+    if (extname(file) === ".webp") {
+      const approved = approvedAssetHashes();
+      const digest = createHash("sha256").update(readFileSync(join(dir, file))).digest("hex");
+      if (!file.startsWith(APPROVED_ASSET_DIR) || approved.get(file.slice(APPROVED_ASSET_DIR.length)) !== digest) fail(`artifact: ${file} is not an approved theme asset (path or SHA-256 differs from manifest.json)`);
+    }
     if (!ALLOWED_EXTENSIONS.has(extname(file))) fail(`artifact: ${file} has a file type that is not runtime code (${extname(file) || "none"})`);
     if (!reachable.has(file)) fail(`artifact: ${file} is not reachable from ${ENTRY}; only runtime files may be published`);
     if (size > LIMITS.fileBytes) fail(`artifact: ${file} is ${size} bytes (limit ${LIMITS.fileBytes})`);

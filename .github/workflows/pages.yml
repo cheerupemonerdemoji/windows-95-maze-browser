@@ -73,3 +73,5 @@ jobs:
         run: npm run smoke
       - name: Phone-sized viewport emulation against the published URL
         run: npm run smoke:mobile
+      - name: Appearance tab, lazy theme assets and upload privacy against the published URL
+        run: npm run smoke:appearance

@@ -22,6 +22,15 @@ and several details are unknown (see below).
   Reduce motion, first-person view or top-down debug map, Fullscreen where the browser offers it, and an evidence JSON export.
 * Works without WebGL 2 (debug map), after WebGL context loss, and on phone-sized screens with 44 px touch targets.
 
+## Appearance and themes (added after 0.1.0 was published)
+
+An Appearance tab chooses the textures. **Classic** (the procedural textures) stays the faithful default. **Backrooms-inspired** is an
+optional theme of three original images generated for this project (no Microsoft artwork, no copied Backrooms photography), loaded only
+when chosen (282 KB). **Custom** lets people pick their own wall, floor and ceiling images (PNG, JPEG or WebP, up to 10 MB and 4096
+pixels); images stay in the browser, are never uploaded, and a resized copy is kept in IndexedDB until "Clear stored images" is used.
+Custom pictures show seams unless they are seamless squares. Themes are presentation only: they change nothing about the maze,
+timing or camera and add no Microsoft Maze evidence.
+
 ## Verified
 
 Unit tests, desktop smoke checks, ten visual-regression views, phone-viewport emulation and a static-artifact check run in CI; the same

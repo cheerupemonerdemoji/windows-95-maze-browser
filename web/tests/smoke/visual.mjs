@@ -31,7 +31,32 @@ const VIEWS = [
   { name: "open-corridor", updates: 159 },
   { name: "start-markers", updates: 22, markers: true },
   { name: "exit-markers-shrinking", updates: 2414, markers: true },
+  // Optional themes (presentation only; Classic stays the faithful default and its baselines above do not change).
+  { name: "backrooms-straight", updates: 87, theme: "backrooms" },
+  { name: "custom-synthetic", updates: 87, custom: true },
 ];
+
+// Deterministic synthetic custom textures, generated in the page with integer geometry only (no user image is ever used).
+const SYNTHETIC = `(() => {
+  const make = (base, line, accent, size) => {
+    const c = document.createElement('canvas'); c.width = size; c.height = size;
+    const x = c.getContext('2d');
+    x.fillStyle = base; x.fillRect(0, 0, size, size);
+    x.fillStyle = line;
+    for (let i = 0; i <= size; i += size / 8) { x.fillRect(i - 2, 0, 4, size); x.fillRect(0, i - 2, size, 4); }
+    x.fillStyle = accent;
+    for (let i = 0; i < size; i += size / 4) x.fillRect(i + size / 16, i + size / 16, size / 8, size / 8);
+    return new Promise((resolve) => c.toBlob((b) => resolve(new File([b], 'synthetic.png', { type: 'image/png' })), 'image/png'));
+  };
+  const give = (id, file) => { const input = document.getElementById(id); const dt = new DataTransfer(); dt.items.add(file); input.files = dt.files; input.dispatchEvent(new Event('change', { bubbles: true })); };
+  const waitFor = async (pattern) => { const el = document.getElementById('appearanceStatus'); for (let i = 0; i < 200; i += 1) { if (pattern.test(el.textContent)) return true; await new Promise((r) => setTimeout(r, 50)); } return false; };
+  return (async () => {
+    give('fileWall', await make('#8a3a2a', '#d8c9a8', '#f0e0b0', 512)); await waitFor(/Wall image applied/);
+    give('fileFloor', await make('#2a5a8a', '#a8c8d8', '#b0d0f0', 512)); await waitFor(/Floor image applied/);
+    give('fileCeiling', await make('#5a8a2a', '#c8d8a8', '#e0f0b0', 512)); await waitFor(/Ceiling image applied/);
+    return true;
+  })();
+})()`;
 const LIMITS = { meanAbsDiff: 4, fractionOver48: 0.03 };
 
 const harness = await startHarness();
@@ -43,8 +68,12 @@ try {
   await page.send("Emulation.setDeviceMetricsOverride", { width: 1000, height: 640, deviceScaleFactor: 1, mobile: false });
   const versionInfo = await page.send("Browser.getVersion");
   for (const view of VIEWS) {
-    await page.send("Page.navigate", { url: `${baseUrl}?seed=1&rng=microsoft&objects=0&reduced=0&quality=standard&markers=${view.markers ? 1 : 0}&view=first` });
+    await page.send("Page.navigate", { url: `${baseUrl}?seed=1&rng=microsoft&objects=0&reduced=0&quality=standard&markers=${view.markers ? 1 : 0}&theme=${view.theme ?? "classic"}&view=first` });
     await wait(1200);
+    if (view.theme === "backrooms") {
+      await page.evaluate("(async () => { const el = document.getElementById('appearanceStatus'); for (let i = 0; i < 200 && !/Backrooms-inspired theme/.test(el.textContent); i += 1) await new Promise((r) => setTimeout(r, 50)); })()");
+    }
+    if (view.custom) await page.evaluate(SYNTHETIC);
     await page.evaluate(`(() => { for (let i = 0; i < ${view.updates}; i += 1) document.getElementById('step').click(); })()`);
     // Pin the canvas shell to an exact size and position so the capture does not depend on page layout (fonts and scrollbars differ
     // between operating systems and moved the picture by a fraction of a pixel on Linux), and hide the DOM overlay.

@@ -131,6 +131,17 @@ SDL/OpenGL executable.
       (`docs/release-checklist.md`): pending the owner's physical-phone answers, a
       BrowserStack run and the copyright-holder name.
 
+## 9. Appearance and texture themes (optional presentation)
+
+- [x] Add an accessible Appearance tab with Classic, Backrooms-inspired and Custom themes (tab semantics, labelled controls, status
+      announcements, 44 px touch targets; `npm run smoke:appearance`, `npm run smoke:mobile`).
+- [x] Ship the Backrooms-inspired textures as optimized, seam-checked, lazily loaded runtime assets with recorded provenance
+      (`web/assets/ASSETS.md`, `web/assets/themes/backrooms/manifest.json`).
+- [x] Let people use their own wall, floor and ceiling images, validated (PNG, JPEG, WebP; 10 MB; 4096 px; no SVG), resized, kept
+      only in the browser (IndexedDB), never uploaded, never exported.
+- [x] Swap textures without touching the maze, run state or camera; delete superseded GL textures; restore after context loss.
+- [ ] Verify the theme interface on a physical phone (`docs/phone-acceptance.md`; pending the owner's answers).
+
 ## Definition of done for the first playable release
 
 - [ ] A visitor can open the page and immediately start a deterministic,

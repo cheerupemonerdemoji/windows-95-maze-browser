@@ -75,7 +75,7 @@ try {
   check("Fullscreen control is present", await page.evaluate(`!!${$("fullscreen")}`));
 
   const stored = await page.evaluate(`JSON.parse(localStorage.getItem('glmaze.settings.v1'))`);
-  check("Settings persist locally without personal data", stored && Object.keys(stored).sort().join() === "logos,markers,objects,pictures,quality,rats,reducedMotion,view", JSON.stringify(stored));
+  check("Settings persist locally without personal data", stored && Object.keys(stored).sort().join() === "logos,markers,objects,pictures,quality,rats,reducedMotion,theme,view", JSON.stringify(stored));
 
   // Keyboard operation and visible focus: Tab reaches every control and each focus ring is a visible outline.
   await load("seed=1&rng=microsoft&reduced=0&objects=1");

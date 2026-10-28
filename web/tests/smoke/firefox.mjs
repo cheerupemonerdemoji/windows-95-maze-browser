@@ -105,6 +105,34 @@ try {
   check("Reduced motion: view holds still during a transition", (await holds(1)) === true);
   check("Normal motion: view moves during a transition", (await holds(0)) === false);
 
+  // Appearance tab: tab semantics, the lazily loaded Backrooms theme and a synthetic PNG upload change the drawing buffer.
+  await load("seed=1&rng=microsoft&reduced=1&objects=0");
+  const redraw = `(() => { ${$("viewMap")}.click(); ${$("viewFirst")}.click(); return ${bufferHash}; })()`;
+  await evaluate(`(() => { for (let i = 0; i < 60; i += 1) ${$("step")}.click(); return true; })()`);
+  const classicHash = await evaluate(redraw);
+  const tabs = await evaluate(`(() => { ${$("tabAppearance")}.click(); return { selected: ${$("tabAppearance")}.getAttribute('aria-selected'), shown: !${$("panelAppearance")}.hidden, panelRole: ${$("panelAppearance")}.getAttribute('role'), status: ${$("appearanceStatus")}.getAttribute('role') }; })()`);
+  check("Appearance tab: selected state, visible panel, tabpanel and status roles", tabs.selected === "true" && tabs.shown === true && tabs.panelRole === "tabpanel" && tabs.status === "status", JSON.stringify(tabs));
+  await evaluate(`${$("themeBackrooms")}.click()`);
+  await evaluate(`(async () => { const el = ${$("appearanceStatus")}; for (let i = 0; i < 200 && !/Backrooms-inspired theme/.test(el.textContent); i += 1) await new Promise((r) => setTimeout(r, 50)); return el.textContent; })()`);
+  const backroomsHash = await evaluate(redraw);
+  check("Choosing the Backrooms-inspired theme changes the picture", backroomsHash !== classicHash);
+  await evaluate(`${$("themeClassic")}.click()`);
+  await evaluate(`new Promise((r) => setTimeout(r, 300))`);
+  check("Choosing Classic again restores the original picture", (await evaluate(redraw)) === classicHash);
+  const uploaded = await evaluate(`(async () => {
+    const c = document.createElement('canvas'); c.width = 128; c.height = 128; const x = c.getContext('2d'); x.fillStyle = '#c80000'; x.fillRect(0, 0, 128, 128);
+    const blob = await new Promise((r) => c.toBlob(r, 'image/png')); const file = new File([blob], 'private-name.png', { type: 'image/png' });
+    const input = ${$("fileWall")}; const dt = new DataTransfer(); dt.items.add(file); input.files = dt.files; input.dispatchEvent(new Event('change', { bubbles: true }));
+    const el = ${$("appearanceStatus")}; for (let i = 0; i < 200 && !/Wall image applied|rejected/.test(el.textContent); i += 1) await new Promise((r) => setTimeout(r, 50));
+    return { status: el.textContent, value: input.value };
+  })()`);
+  check("A PNG wall image is accepted, applied and its name is not kept", /Wall image applied/.test(uploaded.status) && uploaded.value === "" && !/private-name/.test(uploaded.status), uploaded.status);
+  check("The custom wall image changes the picture", (await evaluate(redraw)) !== classicHash);
+  await evaluate(`${$("appearanceClear")}.click()`);
+  await evaluate(`new Promise((r) => setTimeout(r, 400))`);
+  check("Clearing the stored images returns to Classic", (await evaluate(redraw)) === classicHash);
+  await evaluate("localStorage.clear()");
+
   // Resize and DPR.
   await load("seed=1&rng=microsoft&reduced=1", { width: 420, height: 800, dpr: 2 });
   const narrow = await evaluate(`(() => { const c = ${$("webglCanvas")}; return { css: [c.clientWidth, c.clientHeight], backing: [c.width, c.height], overflow: document.documentElement.scrollWidth > innerWidth }; })()`);

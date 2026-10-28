@@ -28,6 +28,11 @@ several details are still unknown (listed in [the parity matrix](docs/parity-mat
   and exit, and a new maze after every exit without reloading.
 * Trigger solids with the recovered 18-update scene roll, experimental flags for marker artwork, picture walls, logo objects and a
   rat, a Turbo 320×200 look, reduced motion, fullscreen, and a JSON/NDJSON evidence export.
+* An **Appearance** tab with three texture themes: **Classic** (the faithful default), an optional **Backrooms-inspired** theme (three
+  original images generated for this project, loaded only when chosen) and **Custom**, where you pick your own wall, floor and ceiling
+  images (PNG, JPEG or WebP, up to 10 MB and 4096 px). Your images stay in your browser and are never uploaded; "Clear stored images"
+  deletes the copy kept for next time. Themes are presentation only and add no Microsoft Maze evidence; custom pictures show seams
+  unless they are seamless squares. `?theme=classic|backrooms|custom` selects a theme from the URL.
 
 With Node.js 20 or newer installed (there is nothing to install):
 
@@ -38,6 +43,7 @@ npm run build           # static artifact in dist/site, validated (this is the w
 npm run smoke           # Chrome or Edge behaviour checks (dev tool; set CHROME_PATH if needed)
 npm run visual          # fixed-seed screenshot comparison
 npm run smoke:mobile    # phone-sized viewport emulation (not a physical-phone test)
+npm run smoke:appearance # Appearance tab: themes, custom uploads, privacy, leaks, context loss (Chrome or Edge)
 npm run smoke:firefox   # Firefox checks over WebDriver BiDi (local only)
 npm run telemetry -- --seed 2017 --updates 3000   # deterministic per-update evidence export
 ```

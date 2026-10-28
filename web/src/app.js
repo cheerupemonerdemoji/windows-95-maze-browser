@@ -3,6 +3,7 @@ import { MazeRun, RUN_STATES } from "./run.js";
 import { SIMULATION_STEP_MS, TRANSITION_UPDATES, originalEdgePose } from "./walker.js";
 import { SETTINGS_KEY, parseSavedSettings, resolveSettings, serializeSettings } from "./settings.js";
 import { WebGLMazeRenderer } from "./webgl-renderer.js";
+import { setupAppearance } from "./appearance.js";
 
 const elements = Object.fromEntries([...document.querySelectorAll("[id]")].map((element) => [element.id, element]));
 const context = elements.mazeCanvas.getContext("2d");
@@ -365,6 +366,8 @@ elements.exportRun.addEventListener("click", () => {
     events: [...events].reverse(),
     // Additive fields (not in the first export format): run lifecycle and the UI settings in force.
     run: run.snapshot().run,
+    // Theme only: which texture source each surface uses and a validation state. Never image bytes, names, paths or metadata.
+    appearance: appearance.describeForExport(),
     settings: { quality: settings.quality, reducedMotion: reducedMotion(), objects: settings.objects, markers: settings.markers, pictures: settings.pictures, logos: settings.logos, rats: settings.rats },
   };
   const link = document.createElement("a");
@@ -384,5 +387,7 @@ elements.viewFirst.addEventListener("click", () => {
 });
 elements.viewMap.addEventListener("click", () => setView("map", "Debug map selected."));
 new ResizeObserver(render).observe(elements.mazeCanvas.parentElement);
+// Texture themes (Appearance tab). Changing a theme only swaps the wall, floor and ceiling pictures and redraws; it never resets the run.
+const appearance = setupAppearance({ elements, renderer, settings, saveSettings, announce, render });
 reset();
 requestAnimationFrame(frame);

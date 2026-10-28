@@ -9,14 +9,15 @@ Last updated 2026-10-27. Items marked **pending** are blocked on a named input a
 
 | Gate | Status | Evidence |
 | --- | --- | --- |
-| Unit tests | done | `npm test`, 76 tests (2026-10-27) |
+| Unit tests | done | `npm test`, 87 tests (2026-10-28) |
 | Syntax of every module, test and tool | done | CI step `node --check` over `web/` |
 | Chrome smoke checks | done | `npm run smoke`, 33 checks, locally on Windows and in CI on Linux (web-ci run 40622972548) |
-| Firefox checks | done locally; **not run in CI** (reason in section 6) | `npm run smoke:firefox`, 11 checks, Firefox 159.0, 2026-10-27 |
-| Visual regression | done | ten fixed-seed views, `web/tests/visual-baselines/BASELINES.md`; passes on an AMD GPU and under SwiftShader |
+| Firefox checks | done locally; **not run in CI** (reason in section 6) | `npm run smoke:firefox`, 17 checks including the Appearance tab, Firefox 159.0, 2026-10-28 |
+| Visual regression | done | twelve fixed-seed views (ten Classic ones unchanged, plus Backrooms and a synthetic custom texture), `web/tests/visual-baselines/BASELINES.md`; passes on an AMD GPU and under SwiftShader |
+| Appearance and themes | done | `npm run smoke:appearance`, 42 checks: uploads, rejections, IndexedDB reload, no upload requests, no file name or image data in exports, context loss, 100+ switches without leaks, semantics, sub-path loading |
 | Static artifact validation | done | `npm run build` validates 12 reachable runtime files, no extra files, relative URLs only, no credentials |
 | No private or Microsoft material in Git or the artifact | done | `npm run validate:repo`, run in CI and before every Pages deployment |
-| Automated phone-viewport checks | done | `npm run smoke:mobile`, 73 checks over three phone profiles in both orientations |
+| Automated phone-viewport checks | done | `npm run smoke:mobile`, 79 checks over three phone profiles in both orientations, including the Appearance tab |
 | GitHub Pages URL works in a clean browser | done: https://cheerupemonerdemoji.github.io/windows-95-maze-browser/, deployed from commit 25e53d7 | the `pages` workflow's `verify` job (33 smoke and 73 phone-emulation checks against the published URL) and the same checks from a fresh local Chrome profile on 2026-10-28 |
 | BrowserStack real-device test | **pending**: no account or credentials | `docs/phone-acceptance.md` |
 | Owner's physical-phone check | **pending**: owner answers needed | `docs/phone-acceptance.md` |
@@ -43,7 +44,8 @@ Last updated 2026-10-27. Items marked **pending** are blocked on a named input a
 | --- | --- | --- |
 | Every control reachable and operable by keyboard, 16 controls in the Tab order | verified | `npm run smoke` (Tab order), `npm run smoke:firefox` |
 | Visible focus on every control: 3 px solid outline | verified | smoke checks and the stylesheet |
-| Touch targets of at least 44 x 44 CSS px on touch devices and small screens | verified in emulation | `npm run smoke:mobile` |
+| Touch targets of at least 44 x 44 CSS px on touch devices and small screens (including the Appearance tab; a radio or checkbox is operated through its 44 px label row) | verified in emulation | `npm run smoke:mobile` |
+| Appearance tab: ARIA tabs (roving tabindex, arrow keys, Home), labelled file inputs, text alternatives for the previews, polite status and announcements for loading, rejection, success and fallback, visible 3 px focus, no focus trap | verified in Chrome and Firefox; not tested with a screen reader | `npm run smoke:appearance`, `npm run smoke:firefox` |
 | Reduce motion honours the system setting and a checkbox: the view holds still, wall growth and roll are skipped, simulation timing unchanged | verified | smoke checks, phone profiles |
 | The 3D image has a text alternative and the state is available as text (Live evidence panel, event log, polite live announcements) and as a top-down debug map | present; not tested with a screen reader | canvas `aria-label`, `#announcement` live region |
 | Content works without WebGL 2 | verified | fallback checks |
@@ -59,7 +61,7 @@ with every experimental flag on (worst case):
 | Metric | Result |
 | --- | --- |
 | Page load | 239 ms, 13 requests, 102,510 bytes transferred (91,348 bytes of script) |
-| Static artifact | 12 runtime files, about 100 KB, no images, fonts or binaries |
+| Static artifact | 17 runtime files, 415,940 bytes (102,501 before the themes): Classic users download about 133 KB; the three theme images (282,144 bytes) are fetched only when chosen |
 | Geometry | 1,852 vertices, 2,778 indices (169 walls, 144 floor quads, 144 ceiling quads, picture overlays) |
 | Draw calls per frame | at most 5 indexed and 10 array draws |
 | Render CPU time | median under 0.1 ms, p95 0.1 ms, max 1.7 ms |
@@ -69,10 +71,18 @@ with every experimental flag on (worst case):
 Not measured: GPU time, any phone, battery or thermal behaviour, memory on a long soak (an earlier soak found constant GL object counts over 300
 maze changes and 6 context-loss cycles).
 
+Theme costs (`npm run smoke:appearance`, 2026-10-28, same machine): switching themes 15 ms median for Backrooms (fetch from cache and decode three images), 1.3 ms for
+Custom, 5 ms for Classic, worst 17 ms; decoding the built-in images 14.7 ms first and 13.9 ms warm; a theme holds 3 MiB of GPU texture
+memory; 102 switches left the live WebGL texture count at 9 and grew the heap 21 KB; frames stayed at 6.9 ms median before and after
+selecting Backrooms; the simulation held 40 updates per second while switching.
+
 ## 5. Asset provenance, licence, acknowledgements, known differences
 
-* Assets: `web/assets/ASSETS.md`. The build ships **no image, texture, font or binary files**; every texture, the Start sign, the smiley,
-  the emblem, the rat and the solids are generated in code and are original project artwork, not Microsoft's. No Microsoft asset or
+* Assets: `web/assets/ASSETS.md`. The Classic view ships no image files: every texture, the Start sign, the smiley, the emblem, the rat
+  and the solids are generated in code and are original project artwork, not Microsoft's. The only binary files are the three optional
+  Backrooms-inspired theme textures (WebP, 282,144 bytes, original images generated for this project, hashes in
+  `web/assets/themes/backrooms/manifest.json`), loaded only when that theme is chosen. People's own custom images never enter the
+  repository or the published files. No Microsoft asset or
   anything extracted from `ssmaze.scr` is in Git or in the published artifact; `npm run validate:repo` and the artifact validator fail the
   build if such files appear.
 * Licence: `docs/license-proposal.md` (terms decided, holder name pending).

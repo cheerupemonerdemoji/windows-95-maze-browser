@@ -210,18 +210,55 @@ the update event and the object event (touch, rolling, consumed). Format version
 repeated runs in both modes, that the module uses no clock or random source, and that every record is complete and inside the
 maze. Options: `--seed`, `--updates`, `--rng microsoft|portable`, `--markers`, `--no-objects`, `--rats`, `--out`.
 
+## Appearance themes
+
+The Appearance tab (next to Run controls) chooses the pictures on the walls, floor and ceiling. It is a presentation option only:
+**Classic stays the faithful default** and its rendering, visual baselines, maze, camera, timing, lighting state and reset behaviour do
+not change. The other themes establish **no new Microsoft Maze evidence**.
+
+* **Classic**: the procedural brick, wood and stipple textures. Nothing extra is downloaded.
+* **Backrooms-inspired**: three original WebP images generated for this project (about 282 KB in total), fetched from the same site
+  only when the theme is chosen or restored; `web/assets/ASSETS.md` records their provenance, transformation and hashes.
+* **Custom**: a wall, floor and ceiling image per surface, each optional (a surface without one uses Classic).
+  * Accepted: PNG, JPEG and WebP up to 10 MB and 4096 pixels per side. The format is decided from the file's bytes, not its name or
+    declared type; SVG, GIF, text and damaged files are rejected with a message that never contains the file name. Dimensions are
+    read from the header before decoding, so a huge image is refused before it uses memory. EXIF orientation is applied, the
+    picture is stretched to a 512 x 512 square and made opaque.
+  * Privacy: files are read with the File API and decoded in the page; nothing is uploaded (the page makes no request that carries
+    image data, checked by an automated network test). Only the resized copy is kept, in IndexedDB under the fixed keys
+    `wall`, `floor` and `ceiling`: no file name, path, metadata, original bytes or digest. Nothing about a user image goes into
+    localStorage, the URL, the evidence export or the event log. The export records only the theme, whether each surface is
+    classic, built-in or user-supplied, and a validation state.
+  * **To clear stored images**: Appearance, "Clear stored images" (or "Remove … image" for one surface). "Reset to Classic" only
+    switches the theme and keeps the stored images.
+  * A custom picture tiles once per wall and once per floor or ceiling cell, so it shows seams unless it is a seamless square.
+* Settings: `theme=classic|backrooms|custom` in the URL overrides the stored choice; the choice persists in the existing settings
+  (localStorage holds only the theme name). If the stored images are missing, damaged or storage is unavailable, Classic is used and
+  the status line and screen-reader announcement say so.
+* Renderer: `setThemeTextures()` replaces the three textures only when a theme is selected or restored, never per frame, with the
+  original sampling state (nearest, repeat, no mipmaps). Superseded GL textures are deleted, pixel data is kept only for the active
+  theme so a lost context can be restored, and `dispose()` releases it. Theme changes do not call the run reset.
+
+Measured on the packaged build (Chrome 156, AMD Radeon RX 5700 XT, `npm run smoke:appearance`, 2026-10-28): 102 theme switches
+left the live WebGL texture count unchanged (9 before and after) and grew the JavaScript heap by 21 KB after collection; switch time
+median 15 ms (Backrooms, includes decoding three images from the HTTP cache), 1.3 ms (Custom), 5 ms (back to Classic), worst 17 ms;
+decoding the three built-in images took 14.7 ms the first time and 13.9 ms warm; animation frames stayed at a 6.9 ms median before and
+after choosing Backrooms; the simulation held 40 updates per second while themes switched; a theme costs 3 x 512 x 512 x 4 = 3 MiB
+of GPU memory; the extra transfer is 282,144 bytes of images, loaded only on demand, plus about 31 KB of code (the packaged artifact grew from
+102,501 to 415,940 bytes).
+
 ## Controls and settings
 
 Play/Pause, Step 25 ms, Generate and seed, Random generator, Render quality
 (High, Standard, Turbo look), Reduce motion (follows the system setting until
 changed), Trigger solids (turning it off restarts the run with none), Start and
-exit markers, Picture walls, Logo objects and Rat (all experimental, off by default; the rat
-and the markers restart the run), First person / Debug map,
+exit markers (artwork only: showing it never restarts or changes the run), Picture walls, Logo objects and Rat (all experimental,
+off by default; the rat restarts the run), the Appearance tab (texture themes, see below), First person / Debug map,
 Fullscreen, and Export evidence JSON. Settings are kept in
-`localStorage` under `glmaze.settings.v1` (quality, view, reduced motion
-and the object flags only). URL parameters win over saved settings: `seed`, `rng`,
-`quality`, `view`, `objects=0`, `markers=1`, `pictures=1`, `logos=1`, `rats=1`, `reduced=1|0`. The export keeps its original
-fields and adds `run` and `settings`.
+`localStorage` under `glmaze.settings.v1` (quality, view, reduced motion,
+the object flags and the theme name only). URL parameters win over saved settings: `seed`, `rng`,
+`quality`, `view`, `objects=0`, `markers=1`, `pictures=1`, `logos=1`, `rats=1`, `reduced=1|0`, `theme=classic|backrooms|custom`. The export keeps its
+original fields and adds `run`, `settings` and `appearance` (theme, the source of each surface and a validation state, nothing else).
 
 ## Tests and checks
 
